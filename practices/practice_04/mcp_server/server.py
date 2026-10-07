@@ -38,7 +38,26 @@ def main():
         req_id = req.get("id")
         method = req.get("method")
 
-        if method == "tools/list":
+        # Нотификации (уведомления без id) не требуют ответа
+        if req_id is None:
+            continue
+
+        if method == "initialize":
+            resp = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {
+                        "tools": {}
+                    },
+                    "serverInfo": {
+                        "name": "diff-guard",
+                        "version": "1.0.0"
+                    }
+                }
+            }
+        elif method == "tools/list":
             resp = {
                 "jsonrpc": "2.0",
                 "id": req_id,
@@ -73,7 +92,6 @@ def main():
             else:
                 resp = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": "Method not found"}}
         else:
-            # Общие методы initialize и т.д.
             resp = {"jsonrpc": "2.0", "id": req_id, "result": {}}
 
         sys.stdout.write(json.dumps(resp) + "\n")
