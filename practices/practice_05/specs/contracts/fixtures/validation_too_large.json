@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "DIFF_TOO_LARGE",
+    "message": "Diff too large",
+    "details": {}
+  }
+}
