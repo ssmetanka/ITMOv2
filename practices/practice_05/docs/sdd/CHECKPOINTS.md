@@ -11,3 +11,12 @@ ea614f203b6f3ce5ba8c6a5a6c2282ecde3e05093e687252763e04f17af40dfd  app/reviewer.p
 v1 specs created: 2026-10-31T18:47:01+03:00
 v2 accepted pending implementation: 2026-10-31T18:48:07+03:00
 ea614f203b6f3ce5ba8c6a5a6c2282ecde3e05093e687252763e04f17af40dfd  app/reviewer.py
+
+- CP-1: Зафиксирована конституция проекта (.specify/memory/constitution.md)
+- CP-2: Сняты v1 спеки UI/Logic
+- CP-3: Обнаружен конфликт формата лимитов (nested vs flat)
+- CP-4: Принято решение — плоский формат лимитов (v2)
+- CP-5: Реализация backend: строгая валидация diff, UTF-16 подсчёт, таймаут, статика UI
+- CP-6: Реализация frontend: счётчики, FSM, история, блокировки, Ctrl+Enter
+- CP-7: Тесты: границы, E2E, MCP; scripts/demo.sh
+- CP-8: Документация и отчёты обновлены; практику 4 описано как исторический контекст

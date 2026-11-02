@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { createApi } from '../api.js';
 
 function makeFetch(resps) {

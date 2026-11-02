@@ -23,11 +23,14 @@ class Api:
         return {"max_lines": MAX_DIFF_LINES, "max_chars": MAX_DIFF_CHARS}
 
     def create_review(self, payload: Dict[str, Any]) -> (int, Dict[str, Any]):
+        # Strict input validation: must be JSON object with string field 'diff'
         if not isinstance(payload, dict) or "diff" not in payload:
             return self._error(HTTPStatus.BAD_REQUEST, "INVALID_REQUEST", "Missing 'diff' field")
         diff = payload.get("diff")
+        if not isinstance(diff, str):
+            return self._error(HTTPStatus.BAD_REQUEST, "INVALID_REQUEST", "Field 'diff' must be a string")
         try:
-            result = self.service.review_code(str(diff))
+            result = self.service.review_code(diff)
             # success; add to history
             record = self.history.add(result["review"])
             return 200, record

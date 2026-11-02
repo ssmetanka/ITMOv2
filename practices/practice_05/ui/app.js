@@ -11,7 +11,7 @@ function render() {
   counter.textContent = `${lines} lines / ${chars} chars`;
   counter.className = 'counter' + ((lines > state.limits.max_lines || chars > state.limits.max_chars) ? ' exceeded' : '');
   const btn = document.getElementById('check');
-  btn.disabled = state.status === 'validation_error' || !state.input.trim();
+  btn.disabled = state.status === 'validation_error' || state.status === 'loading' || !state.input.trim();
   const statusEl = document.getElementById('status');
   statusEl.textContent = state.status;
   const ul = document.getElementById('history');
@@ -19,6 +19,12 @@ function render() {
   state.history.forEach(r => {
     const li = document.createElement('li');
     li.textContent = `${r.created_at} — ${r.review}`;
+    li.addEventListener('click', async () => {
+      try {
+        // simple display of selected review
+        alert(r.review);
+      } catch {}
+    });
     ul.appendChild(li);
   });
 }
@@ -27,6 +33,13 @@ async function init() {
   try {
     const lim = await api.limits();
     state = reducer(state, { type: 'set_limits', limits: lim });
+  } catch {}
+  try {
+    const hist = await api.list(5);
+    if (hist && Array.isArray(hist.items)) {
+      // preload recent history
+      state.history = hist.items.slice(0, 5);
+    }
   } catch {}
   render();
 }

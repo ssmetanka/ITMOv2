@@ -1,11 +1,11 @@
-# Review Console Logic — v1
+# Review Console Logic — v2
 
 ## User Stories
 - US-1: Как система, я хочу предоставлять API для ревью и истории, чтобы UI мог работать.
 
 ## Functional Requirements
-- FR-API-001: GET /api/limits возвращает лимиты MAX_DIFF_LINES, MAX_DIFF_CHARS.
-- FR-API-002: POST /api/reviews {diff} вызывает ReviewService.review_code; поведение не меняется.
+- FR-API-001: GET /api/limits возвращает лимиты MAX_DIFF_LINES, MAX_DIFF_CHARS (плоский формат).
+- FR-API-002: POST /api/reviews {diff: string} вызывает ReviewService.review_code; строгая проверка типа.
 - FR-API-003: GET /api/reviews?limit=N возвращает историю (новые первыми), максимум 50 хранится.
 - FR-API-004: GET /api/reviews/{id} возвращает запись.
 - FR-API-005: Исключения типов DiffEmptyError и DiffTooLargeError в reviewer.py с теми же текстами.
@@ -28,4 +28,4 @@
 - Нет БД, нет auth, только stdlib.
 
 ## Допущения об интерфейсе с другой командой
-- UI считает строки идентично серверу: diff.strip().splitlines(); лимиты берёт из /api/limits; формат ответов см. контракт.
+- UI считает строки идентично серверу: diff.strip().splitlines(); лимиты берёт из /api/limits (плоский формат); формат ответов см. контракт.

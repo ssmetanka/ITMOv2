@@ -6,6 +6,7 @@ export const initialState = {
 };
 
 export function countMetrics(text) {
+  // Count chars like JS String.length (UTF-16 code units); native length suffices
   const chars = text.length;
   const lines = text.trim().length ? text.trim().split(/\r?\n/).length : 0;
   return { chars, lines };

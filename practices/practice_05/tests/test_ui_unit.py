@@ -2,14 +2,17 @@ import os
 import subprocess
 import sys
 import unittest
+from pathlib import Path
+from shutil import which
 
 
 class TestUIUnit(unittest.TestCase):
     def test_node_tests(self):
-        node = shutil.which('node') if False else None
-        # Try to find node in PATH
-        from shutil import which
         if which('node') is None:
             self.skipTest('Node.js not available')
-        proc = subprocess.run(['node', '--test', 'ui/tests'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        # Collect .mjs tests explicitly to avoid shell globbing assumptions
+        tests_dir = Path(__file__).resolve().parent.parent / 'ui' / 'tests'
+        test_files = sorted(str(p) for p in tests_dir.glob('*.test.mjs'))
+        cmd = ['node', '--test', *test_files]
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         self.assertEqual(proc.returncode, 0, msg=proc.stdout)

@@ -1,4 +1,4 @@
-# Review Console UI — v1
+# Review Console UI — v2
 
 ## User Stories (prioritized)
 - US-1: Как пользователь, я хочу вставить diff и увидеть счётчик строк/символов с подсветкой превышения, чтобы понять, можно ли отправлять.
@@ -7,8 +7,8 @@
 
 ## Functional Requirements
 - FR-UI-001: Поле ввода diff с живым счётчиком (строки/символы), лимиты подсвечиваются при превышении.
-- FR-UI-002: Кнопка «Проверить» неактивна при пустом или слишком большом вводе; Ctrl+Enter = отправка.
-- FR-UI-003: Состояния экрана (FSM): idle, loading, success, validation_error, llm_unavailable, network_error; пустая история — отдельное состояние.
+- FR-UI-002: Кнопка «Проверить» неактивна при пустом или слишком большом вводе; Ctrl+Enter = отправка; при loading кнопка блокируется.
+- FR-UI-003: Состояния экрана (FSM): idle, loading, success, validation_error, llm_unavailable, network_error; пустая история отображается корректно.
 - FR-UI-004: Панель истории: показывает последние 5; клик по записи отображает сохранённое ревью.
 - FR-UI-005: aria-live для статусов.
 
@@ -32,3 +32,4 @@
 ## Допущения об интерфейсе с другой командой
 - UI ожидает API: GET /api/limits; POST /api/reviews; GET /api/reviews?limit=5; GET /api/reviews/{id}.
 - Формат ошибок: error.code, error.message, error.details; коды DIFF_EMPTY, DIFF_TOO_LARGE, LLM_UNAVAILABLE, INVALID_REQUEST, NOT_FOUND.
+- Формат лимитов — плоский {max_lines,max_chars}.

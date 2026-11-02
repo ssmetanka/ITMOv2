@@ -1,4 +1,6 @@
 import time
+import threading
+
 
 class DiffEmptyError(ValueError):
     pass
@@ -14,13 +16,19 @@ class ReviewService:
         self.llm_client = llm_client
         self.timeout_sec = timeout_sec
 
+    def _utf16_code_units(self, text: str) -> int:
+        """Count characters as UTF-16 code units to align with JS String.length."""
+        # utf-16-le has no BOM; each code unit is 2 bytes
+        return len(text.encode('utf-16-le')) // 2
+
     def validate_diff(self, diff_text: str) -> None:
         """Фича A: проверка размера входящего diff без обращения к LLM."""
         if not diff_text or not diff_text.strip():
             # Сохраняем текст сообщения для совместимости тестов
             raise DiffEmptyError("Diff cannot be empty")
         
-        if len(diff_text) > MAX_DIFF_CHARS:
+        # Count by UTF-16 code units for parity with frontend
+        if self._utf16_code_units(diff_text) > MAX_DIFF_CHARS:
             # Сохраняем текст, который ожидают старые тесты
             raise DiffTooLargeError("Diff too large: character limit exceeded")
         
@@ -36,17 +44,25 @@ class ReviewService:
         self.validate_diff(diff_text)
 
         # 2. Вызов LLM с контролем таймаута (Фича B)
-        start_time = time.time()
-        try:
-            if self.llm_client:
-                # Имитация защищенного вызова
-                result = self.llm_client.generate_review(diff_text, timeout=self.timeout_sec)
-            else:
-                result = "Mock review: code looks solid."
-                
-            if time.time() - start_time > self.timeout_sec:
-                raise TimeoutError("Execution exceeded timeout threshold")
-                
-            return {"status": "success", "review": result}
-        except (TimeoutError, Exception) as err:
-            raise RuntimeError(f"LLM service unavailable or timed out: {str(err)}")
+        # Implement soft timeout: run client call in a worker thread, wait with timeout.
+        # We cannot preemptively abort a blocking call, but we will stop waiting and report timeout.
+        result_holder = {"value": None, "error": None}
+
+        def _call():
+            try:
+                if self.llm_client:
+                    result_holder["value"] = self.llm_client.generate_review(diff_text, timeout=self.timeout_sec)
+                else:
+                    result_holder["value"] = "Mock review: code looks solid."
+            except Exception as e:  # capture client errors
+                result_holder["error"] = e
+
+        t = threading.Thread(target=_call, daemon=True)
+        t.start()
+        t.join(self.timeout_sec)
+        if t.is_alive():
+            # Timed out
+            raise RuntimeError("LLM service unavailable or timed out: timeout exceeded")
+        if result_holder["error"] is not None:
+            raise RuntimeError(f"LLM service unavailable or timed out: {result_holder['error']}")
+        return {"status": "success", "review": result_holder["value"]}

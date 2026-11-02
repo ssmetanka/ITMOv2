@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import os
+import mimetypes
 from urllib.parse import parse_qs, urlparse
 
 from app.api import Api
@@ -10,18 +12,50 @@ from app.api import Api
 
 class Handler(BaseHTTPRequestHandler):
     api = Api()
+    ui_root = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ui")
 
     def _set_headers(self, code: int, content_type: str = "application/json"):
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.end_headers()
 
+    def _serve_static(self, path: str) -> bool:
+        # Map "/" to "/ui/index.html" and "/ui" to "/ui/index.html"
+        if path == "/" or path == "/ui" or path == "/ui/":
+            rel = "index.html"
+            base = self.ui_root
+        elif path.startswith("/ui/"):
+            rel = path[len("/ui/") :]
+            base = self.ui_root
+        else:
+            return False
+
+        # Prevent path traversal
+        safe_root = os.path.abspath(base)
+        requested = os.path.abspath(os.path.join(base, rel))
+        if not requested.startswith(safe_root):
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"error": {"code": "NOT_FOUND", "message": "Not found", "details": {}}}).encode())
+            return True
+
+        if not os.path.isfile(requested):
+            self._set_headers(404)
+            self.wfile.write(json.dumps({"error": {"code": "NOT_FOUND", "message": "Not found", "details": {}}}).encode())
+            return True
+
+        ctype, _ = mimetypes.guess_type(requested)
+        ctype = ctype or "application/octet-stream"
+        self._set_headers(200, ctype)
+        with open(requested, "rb") as f:
+            self.wfile.write(f.read())
+        return True
+
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
-        if parsed.path == "/":
-            self._set_headers(200, "text/plain")
-            self.wfile.write(b"AI-Review server")
-            return
+        # Static UI first (no /api prefix)
+        if not parsed.path.startswith("/api/"):
+            if self._serve_static(parsed.path):
+                return
         if parsed.path == "/api/limits":
             self._set_headers(200)
             self.wfile.write(json.dumps(self.api.get_limits()).encode())
