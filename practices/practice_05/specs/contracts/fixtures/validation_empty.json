@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "DIFF_EMPTY",
+    "message": "Diff cannot be empty",
+    "details": {}
+  }
+}
