@@ -1,0 +1,10 @@
+Makefile:16: warning: overriding recipe for target 'step6'
+Makefile:13: warning: ignoring old recipe for target 'step6'
+test_health_and_not_found (test_http.HttpTest.test_health_and_not_found) ... ok
+test_login_and_purchase_over_http (test_http.HttpTest.test_login_and_purchase_over_http) ... ok
+test_transport_only_binds_loopback (test_http.HttpTest.test_transport_only_binds_loopback) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.520s
+
+OK

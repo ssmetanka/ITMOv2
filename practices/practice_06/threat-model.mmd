@@ -1,0 +1,22 @@
+flowchart LR
+  subgraph Internet
+    U[User]
+  end
+  subgraph App
+    Svc[HTTP Service]
+    Asst[Assistant Executor]
+  end
+  subgraph Data
+    DB[(SQLite in-memory)]
+    FS[(Sandbox FS)]
+  end
+  subgraph LLM
+    Judge[LLM Judge]
+  end
+  U -->|HTTP| Svc
+  Svc --> DB
+  Svc --> FS
+  Svc --> Asst
+  Asst --> FS
+  Asst --> DB
+  Svc -.-> Judge
