@@ -1,0 +1,26 @@
+flowchart LR
+  subgraph Internet
+    U[User]
+  end
+  subgraph App
+    Svc[HTTP API]
+    Asst[Tool Executor]
+    Logs[(Logs)]
+  end
+  subgraph Data
+    DB[(SQLite in-memory)]
+    FS[(Sandbox FS)]
+  end
+  subgraph LLM
+    Judge[LLM Judge (prompt only)]
+  end
+  U -->|HTTP| Svc
+  Svc --> DB
+  Svc --> FS
+  Svc --> Asst
+  Svc --> Logs
+  Asst --> FS
+  Asst --> DB
+  Svc -.-> Judge
+
+  %% Trust boundaries: Internet/App, App/Data, App/LLM

@@ -55,6 +55,40 @@ class HttpTest(unittest.TestCase):
     def test_transport_only_binds_loopback(self):
         self.assertEqual(self.server.server_address[0], "127.0.0.1")
 
+    def test_reviews_are_escaped_over_http(self):
+        # login
+        status, _, body = self.call("POST", "/login", {"username": "alice", "password": "learn-alice"})
+        self.assertEqual(status, 200)
+        token = json.loads(body)["token"]
+        # post review
+        text = "<img src=x onerror=alert(1)> & <script>boom</script>"
+        status, _, _ = self.call("POST", "/reviews", {"product": "chair", "text": text}, {"X-Token": token})
+        self.assertEqual(status, 201)
+        # view reviews
+        status, headers, body = self.call("GET", "/reviews/view", headers={"X-Token": token})
+        self.assertEqual(status, 200)
+        self.assertIn("text/html", headers["Content-Type"])
+        self.assertIn("&lt;img src=x onerror=alert(1)&gt; &amp; &lt;script&gt;boom&lt;/script&gt;", body)
+
+    def test_assistant_context_http_auth_and_sqli(self):
+        # no token
+        status, _, _ = self.call("GET", "/assistant/context?order_id=1")
+        self.assertEqual(status, 401)
+        # login as alice
+        status, _, body = self.call("POST", "/login", {"username": "alice", "password": "learn-alice"})
+        self.assertEqual(status, 200)
+        token = json.loads(body)["token"]
+        # own order ok
+        status, _, body = self.call("GET", "/assistant/context?order_id=1", headers={"X-Token": token})
+        self.assertEqual(status, 200)
+        self.assertIn("chair", body)
+        # foreign order hidden
+        status, _, _ = self.call("GET", "/assistant/context?order_id=2", headers={"X-Token": token})
+        self.assertEqual(status, 404)
+        # SQLi attempt rejected
+        status, _, _ = self.call("GET", "/assistant/context?order_id=1%20OR%201%3D1", headers={"X-Token": token})
+        self.assertEqual(status, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
