@@ -1,0 +1,714 @@
+{
+  "name": "Practice 7.1 - AI Code Review Assistant (12 pts)",
+  "nodes": [
+    {
+      "parameters": {
+        "owner": {
+          "__rl": true,
+          "value": "ssmetanka",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "algos",
+          "mode": "name"
+        },
+        "events": [
+          "issue_comment",
+          "pull_request"
+        ],
+        "options": {}
+      },
+      "id": "6a9b942f-6b13-43f4-a85b-6c05b79f8ee6",
+      "name": "GitHub Trigger",
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        0
+      ],
+      "webhookId": "f53207ea-e4b0-488f-97b9-c73e2d90fbbc",
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "created",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $json.body.issue ? $json.body.issue.html_url : \"\" }}",
+              "rightValue": "/pull/",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "438af20a-abc4-4c10-9533-0d4d033c737b",
+      "name": "If PR Comment",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.comment.body.trim() }}",
+                    "rightValue": "/make_ai_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "960f33c1-7bfe-4b93-b04c-d891e8a08c2e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ai_review"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.comment.body.trim() }}",
+                    "rightValue": "/make_other_ai_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0bcb9231-b17e-43c1-85ad-7bdd83e64da9"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "other_ai_review"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3dcd2f83-941c-4556-8f81-220a7d4bafc9",
+      "name": "Switch Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        112,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "AO4XsQuzlXIXUwBl",
+          "mode": "list",
+          "cachedResultName": "reviewed_prs",
+          "cachedResultUrl": "/projects/9iyTziRjgci6PyXP/datatables/AO4XsQuzlXIXUwBl"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "pr_id",
+              "keyValue": "={{ String($('GitHub Trigger').item.json.body.issue.number) }}"
+            }
+          ]
+        }
+      },
+      "id": "381dafe0-d304-4618-8066-f1e694fa6934",
+      "name": "Check PR in Data Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -144
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-new",
+              "leftValue": "={{ $json.pr_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2dd8df70-5df3-4aa0-9622-907b56f68e92",
+      "name": "Is New PR?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "model_choice",
+              "value": "primary",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "761b8449-3aec-461f-93dd-e048e4e20f1a",
+      "name": "Set Model 1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m2",
+              "name": "model_choice",
+              "value": "other",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5aafa59b-adef-4a31-ab85-ca31dfe6ef0c",
+      "name": "Set Model 2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $('GitHub Trigger').item.json.body.repository.full_name }}/pulls/{{ $('GitHub Trigger').item.json.body.issue.number }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "8e144fab-715e-4bc8-9c8b-1966b94f53c7",
+      "name": "Get PR Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $('GitHub Trigger').item.json.body.repository.full_name }}/pulls/{{ $('GitHub Trigger').item.json.body.issue.number }}/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "26021b2e-694b-425a-a8a0-508e2aadf832",
+      "name": "Get PR Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        0
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const triggerData = $('GitHub Trigger').first().json.body;\nconst prDetails = $('Get PR Details').first().json;\nconst modelChoice = $('Set Model 1').isExecuted ? 'primary' : 'other';\nconst results = [];\n\nfor (const item of $input.all()) {\n  const file = item.json;\n  if (!file.patch) continue;\n\n  const hunks = file.patch.split(/(?=^@@ -\\d+)/m);\n  for (const hunk of hunks) {\n    const headerMatch = hunk.match(/^@@ -(\\d+)(?:,\\d+)? \\+(\\d+)(?:,\\d+)? @@/);\n    if (!headerMatch) continue;\n\n    let leftLine = parseInt(headerMatch[1], 10);\n    let rightLine = parseInt(headerMatch[2], 10);\n    let targetLine = null;\n    let targetSide = 'RIGHT';\n    let lastRight = null;\n    let lastLeft = null;\n\n    const lines = hunk.split('\\n').slice(1);\n    for (const line of lines) {\n      if (!line) continue;\n\n      if (line.startsWith('+')) {\n        targetLine = rightLine;\n        targetSide = 'RIGHT';\n        lastRight = rightLine;\n        rightLine++;\n      } else if (line.startsWith('-')) {\n        lastLeft = leftLine;\n        leftLine++;\n      } else if (!line.startsWith('\\\\')) {\n        lastRight = rightLine;\n        lastLeft = leftLine;\n        rightLine++;\n        leftLine++;\n      }\n    }\n\n    if (targetLine === null) {\n      if (lastRight !== null) {\n        targetLine = lastRight;\n        targetSide = 'RIGHT';\n      } else {\n        targetLine = lastLeft;\n        targetSide = 'LEFT';\n      }\n    }\n\n    results.push({\n      json: {\n        repo_full_name: triggerData.repository.full_name,\n        pr_number: triggerData.issue.number,\n        commit_id: prDetails.head.sha,\n        filename: file.filename,\n        line: targetLine,\n        side: targetSide,\n        code_block: hunk,\n        model_choice: modelChoice\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "id": "4101febb-45ba-4a56-9e54-932024627f47",
+      "name": "Split Diff Hunks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "route-model",
+              "leftValue": "={{ $json.model_choice }}",
+              "rightValue": "other",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b2515c4c-b403-4ae5-83f0-58f1a062f0ba",
+      "name": "Route by Model",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Проведи краткое, но точное код-ревью этого блока изменений из файла {{ $json.filename }}.\nУкажи на баги, крайние случаи или улучшения, если они есть. Если код корректный — кратко отметь это. Отвечай на русском.\n\nБлок кода:\n{{ $json.code_block }}"
+      },
+      "id": "b75bdba5-88a8-4b8a-ba33-8b18a2a76442",
+      "name": "LLM Review (Model 2)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1936,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o",
+        "options": {}
+      },
+      "id": "8f0ed505-b282-4f70-9102-7f6a071754d6",
+      "name": "Second Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        -368
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "oOjTG8UAw7NhpYGv",
+          "name": "OpenAI account 69"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $('Split Diff Hunks').item.json.repo_full_name }}/pulls/{{ $('Split Diff Hunks').item.json.pr_number }}/comments",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: \"🤖 **[Other AI Model Review]**\\n\\n\" + ($json.text || \"OK\"), commit_id: $('Split Diff Hunks').all()[$itemIndex].json.commit_id, path: $('Split Diff Hunks').all()[$itemIndex].json.filename, line: $('Split Diff Hunks').all()[$itemIndex].json.line, side: $('Split Diff Hunks').all()[$itemIndex].json.side }) }}",
+        "options": {}
+      },
+      "id": "f39d059b-0111-42ff-8cb3-3f30a5fe1c3e",
+      "name": "Post Inline Comment (Model 2)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2256,
+        -160
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Проведи краткое, но точное код-ревью этого блока изменений из файла {{ $json.filename }}.\nУкажи на баги, крайние случаи или улучшения, если они есть. Если код корректный — кратко отметь это. Отвечай на русском.\n\nБлок кода:\n{{ $json.code_block }}"
+      },
+      "id": "b0738cd0-9d8c-4668-95d8-cc65997208ec",
+      "name": "LLM Review (Model 1)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1936,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "id": "937d6dc5-4f29-4893-b5b3-d84d78736965",
+      "name": "Primary Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        320
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "oOjTG8UAw7NhpYGv",
+          "name": "OpenAI account 69"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $('Split Diff Hunks').item.json.repo_full_name }}/pulls/{{ $('Split Diff Hunks').item.json.pr_number }}/comments",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: \"🤖 **[Primary AI Model Review]**\\n\\n\" + ($json.text || \"OK\"), commit_id: $('Split Diff Hunks').all()[$itemIndex].json.commit_id, path: $('Split Diff Hunks').all()[$itemIndex].json.filename, line: $('Split Diff Hunks').all()[$itemIndex].json.line, side: $('Split Diff Hunks').all()[$itemIndex].json.side }) }}",
+        "options": {}
+      },
+      "id": "7f94179e-c6a6-47aa-ad62-93908c8ef5c2",
+      "name": "Post Inline Comment (Model 1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2256,
+        160
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "AO4XsQuzlXIXUwBl",
+          "mode": "list",
+          "cachedResultName": "reviewed_prs",
+          "cachedResultUrl": "/projects/9iyTziRjgci6PyXP/datatables/AO4XsQuzlXIXUwBl"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pr_id": "={{ String($('GitHub Trigger').first().json.body.issue.number) }}"
+          },
+          "matchingColumns": [
+            "pr_id"
+          ],
+          "schema": [
+            {
+              "id": "pr_id",
+              "displayName": "pr_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a7dcfae8-6bcb-4ac6-b0a9-188f6cb5df56",
+      "name": "Save PR to Data Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        160
+      ],
+      "executeOnce": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GitHub Trigger": {
+      "main": [
+        [
+          {
+            "node": "If PR Comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If PR Comment": {
+      "main": [
+        [
+          {
+            "node": "Switch Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Command": {
+      "main": [
+        [
+          {
+            "node": "Check PR in Data Table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Model 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check PR in Data Table": {
+      "main": [
+        [
+          {
+            "node": "Is New PR?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New PR?": {
+      "main": [
+        [
+          {
+            "node": "Set Model 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Model 1": {
+      "main": [
+        [
+          {
+            "node": "Get PR Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Model 2": {
+      "main": [
+        [
+          {
+            "node": "Get PR Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR Details": {
+      "main": [
+        [
+          {
+            "node": "Get PR Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR Files": {
+      "main": [
+        [
+          {
+            "node": "Split Diff Hunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Diff Hunks": {
+      "main": [
+        [
+          {
+            "node": "Route by Model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Model": {
+      "main": [
+        [
+          {
+            "node": "LLM Review (Model 2)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LLM Review (Model 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Second Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Review (Model 2)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Review (Model 2)": {
+      "main": [
+        [
+          {
+            "node": "Post Inline Comment (Model 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Primary Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Review (Model 1)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Review (Model 1)": {
+      "main": [
+        [
+          {
+            "node": "Post Inline Comment (Model 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Inline Comment (Model 1)": {
+      "main": [
+        [
+          {
+            "node": "Save PR to Data Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "23eb5fe5-31fd-4a38-bb4e-e7d4abdb2fb8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "68dbbb4e8fa686c3fd4e9982ade6836edb66976f207553e7ac22df961581c78c"
+  },
+  "nodeGroups": [],
+  "id": "qsAVz5LebQfx6zE9",
+  "tags": []
+}
