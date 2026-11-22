@@ -1,0 +1,436 @@
+{
+  "name": "Practice 7.2 - Weekly Report",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/ssmetanka/algos/issues?state=all&since={{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&per_page=100",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "abf99b18-fcf8-41d5-a958-cb4fba436127",
+      "name": "1. Get All Week Issues",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        -96
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/ssmetanka/algos/issues?state=open&since={{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&per_page=100",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "1d6d4ccf-a567-460c-8880-52118d5522e0",
+      "name": "2. Get Open Week Issues",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        192,
+        -96
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/ssmetanka/algos/issues?state=closed&since={{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&per_page=100",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "b0ceb0da-d47b-4f3d-8746-815a749feefb",
+      "name": "3. Get Closed Week Issues",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        -96
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/ssmetanka/algos/issues/comments?since={{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&per_page=100",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "5153b4fd-cedd-4ee0-9af4-c24ddef3d763",
+      "name": "4. Get Week Comments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        -96
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "githubApi": {
+          "id": "SkxZsbfdb00KTl7K",
+          "name": "GitHub account 76"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "j8EWhlCYDZqGGaKw",
+          "mode": "list",
+          "cachedResultName": "weekly_stats",
+          "cachedResultUrl": "/projects/9iyTziRjgci6PyXP/datatables/j8EWhlCYDZqGGaKw"
+        },
+        "returnAll": true
+      },
+      "id": "e6bc5df6-5987-4878-9e48-08e91adb7cfb",
+      "name": "Get Previous Week Stats",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -96
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const allIssues = $('1. Get All Week Issues').all()\n  .map(i => i.json)\n  .filter(item => item && item.number && !item.pull_request);\n\nconst openIssues = $('2. Get Open Week Issues').all()\n  .map(i => i.json)\n  .filter(item => item && item.number && !item.pull_request);\n\nconst closedIssues = $('3. Get Closed Week Issues').all()\n  .map(i => i.json)\n  .filter(item => item && item.number && !item.pull_request);\n\nconst comments = $('4. Get Week Comments').all()\n  .map(i => i.json)\n  .filter(item => item && item.id);\n\nconst byType = { bug: 0, feature: 0, task: 0, 'needs-triage': 0 };\nconst byAuthor = {};\n\nfor (const issue of allIssues) {\n  const author = issue.user?.login || 'unknown';\n  byAuthor[author] = (byAuthor[author] || 0) + 1;\n\n  const labels = (issue.labels || []).map(l => l.name);\n  for (const key of Object.keys(byType)) {\n    if (labels.includes(key)) {\n      byType[key]++;\n    }\n  }\n}\n\nconst prevRows = $('Get Previous Week Stats').all()\n  .map(r => r.json)\n  .filter(r => r && r.total !== undefined);\n\nconst prev = prevRows.length > 0\n  ? prevRows[prevRows.length - 1]\n  : { total: 0, bugs: 0, features: 0, tasks: 0, needs_triage: 0 };\n\nconst fmtDelta = (curr, old) => {\n  const d = Number(curr) - Number(old || 0);\n  return d > 0 ? `+${d}` : `${d}`;\n};\n\nconst delta = {\n  total: fmtDelta(allIssues.length, prev.total),\n  bugs: fmtDelta(byType.bug, prev.bugs),\n  features: fmtDelta(byType.feature, prev.features),\n  tasks: fmtDelta(byType.task, prev.tasks),\n  needs_triage: fmtDelta(byType['needs-triage'], prev.needs_triage)\n};\n\nconst authorRowsHtml = Object.entries(byAuthor)\n  .map(([author, count]) => `<tr><td style=\"padding:6px 12px;border:1px solid #ddd;\">${author}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">${count}</td></tr>`)\n  .join('') || '<tr><td colspan=\"2\" style=\"padding:6px 12px;border:1px solid #ddd;\">Нет данных</td></tr>';\n\nreturn [{\n  json: {\n    week_date: new Date().toISOString().slice(0, 10),\n    total: allIssues.length,\n    open_count: openIssues.length,\n    closed_count: closedIssues.length,\n    comments_count: comments.length,\n    bugs: byType.bug,\n    features: byType.feature,\n    tasks: byType.task,\n    needs_triage: byType['needs-triage'],\n    prev,\n    delta,\n    byAuthor,\n    authorRowsHtml\n  }\n}];"
+      },
+      "id": "7dd45e1b-3f49-47f7-afd8-ec96638f95b2",
+      "name": "Aggregate & Compute Delta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ты технический ассистент проекта. Напиши краткий аналитический вывод (3-4 предложения на русском языке) для еженедельного отчёта по GitHub Issues.\n\nСтатистика текущей недели:\n- Всего Issues: {{ $json.total }} (Δ к прошлой неделе: {{ $json.delta.total }})\n- Баги (bug): {{ $json.bugs }} (Δ: {{ $json.delta.bugs }})\n- Новые фичи (feature): {{ $json.features }} (Δ: {{ $json.delta.features }})\n- Задачи (task): {{ $json.tasks }} (Δ: {{ $json.delta.tasks }})\n- Требуют разбора (needs-triage): {{ $json.needs_triage }} (Δ: {{ $json.delta.needs_triage }})\n- Открыто: {{ $json.open_count }}, Закрыто: {{ $json.closed_count }}, Комментариев: {{ $json.comments_count }}\n- Авторы: {{ JSON.stringify($json.byAuthor) }}\n\nОтметь динамику по сравнению с прошлой неделей и на что команде обратить внимание."
+      },
+      "id": "e7c2240e-e411-49fa-8575-77cbf0aa6960",
+      "name": "Generate AI Commentary",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1328,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "id": "5317e6be-0c37-418f-a699-b8cc1df5e455",
+      "name": "Report Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        112
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "oOjTG8UAw7NhpYGv",
+          "name": "OpenAI account 69"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "j8EWhlCYDZqGGaKw",
+          "mode": "list",
+          "cachedResultName": "weekly_stats",
+          "cachedResultUrl": "/projects/9iyTziRjgci6PyXP/datatables/j8EWhlCYDZqGGaKw"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "week_date": "={{ $('Aggregate & Compute Delta').first().json.week_date }}",
+            "total": "={{ $('Aggregate & Compute Delta').first().json.total }}",
+            "bugs": "={{ $('Aggregate & Compute Delta').first().json.bugs }}",
+            "features": "={{ $('Aggregate & Compute Delta').first().json.features}}",
+            "tasks": "={{ $('Aggregate & Compute Delta').first().json.tasks }}",
+            "needs_triage": "={{ $('Aggregate & Compute Delta').first().json.needs_triage }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "week_date",
+              "displayName": "week_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total",
+              "displayName": "total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "bugs",
+              "displayName": "bugs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "features",
+              "displayName": "features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tasks",
+              "displayName": "tasks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "needs_triage",
+              "displayName": "needs_triage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b3897611-b9f0-4bda-8815-412f2c1ddb5c",
+      "name": "Save Week to Data Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        -96
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "sendTo": "mmura997@yandex.ru",
+        "subject": "=Еженедельный отчёт по GitHub Issues ({{ $('Aggregate & Compute Delta').first().json.week_date }})",
+        "message": "=<h2>Еженедельная статистика GitHub Issues — ssmetanka/algos</h2>\n<p>Период: последние 7 дней (дата отчёта: <b>{{ $('Aggregate & Compute Delta').first().json.week_date }}</b>)</p>\n<p>Открыто за неделю: <b>{{ $('Aggregate & Compute Delta').first().json.open_count }}</b> | Закрыто: <b>{{ $('Aggregate & Compute Delta').first().json.closed_count }}</b> | Комментариев: <b>{{ $('Aggregate & Compute Delta').first().json.comments_count }}</b></p>\n\n<h3>1. Статистика по типам и сравнение с прошлой неделей (Δ)</h3>\n<table style=\"border-collapse:collapse;width:100%;max-width:600px;\">\n  <thead>\n    <tr style=\"background:#f4f4f4;\">\n      <th style=\"padding:6px 12px;border:1px solid #ddd;text-align:left;\">Тип</th>\n      <th style=\"padding:6px 12px;border:1px solid #ddd;text-align:left;\">Текущая неделя</th>\n      <th style=\"padding:6px 12px;border:1px solid #ddd;text-align:left;\">Прошлая неделя</th>\n      <th style=\"padding:6px 12px;border:1px solid #ddd;text-align:left;\">Δ (изменение)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr><td style=\"padding:6px 12px;border:1px solid #ddd;\"><b>Всего Issues</b></td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.total }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.prev.total || 0 }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\"><b>{{ $('Aggregate & Compute Delta').first().json.delta.total }}</b></td></tr>\n    <tr><td style=\"padding:6px 12px;border:1px solid #ddd;\">bug</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.bugs }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.prev.bugs || 0 }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.delta.bugs }}</td></tr>\n    <tr><td style=\"padding:6px 12px;border:1px solid #ddd;\">feature</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.features }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.prev.features || 0 }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.delta.features }}</td></tr>\n    <tr><td style=\"padding:6px 12px;border:1px solid #ddd;\">task</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.tasks }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.prev.tasks || 0 }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.delta.tasks }}</td></tr>\n    <tr><td style=\"padding:6px 12px;border:1px solid #ddd;\">needs-triage</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.needs_triage }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.prev.needs_triage || 0 }}</td><td style=\"padding:6px 12px;border:1px solid #ddd;\">{{ $('Aggregate & Compute Delta').first().json.delta.needs_triage }}</td></tr>\n  </tbody>\n</table>\n\n<h3>2. Статистика по авторам</h3>\n<table style=\"border-collapse:collapse;width:100%;max-width:400px;\">\n  <thead>\n    <tr style=\"background:#f4f4f4;\">\n      <th style=\"padding:6px 12px;border:1px solid #ddd;text-align:left;\">Автор</th>\n      <th style=\"padding:6px 12px;border:1px solid #ddd;text-align:left;\">Issues</th>\n    </tr>\n  </thead>\n  <tbody>\n    {{ $('Aggregate & Compute Delta').first().json.authorRowsHtml }}\n  </tbody>\n</table>\n\n<div style=\"margin-top:16px;padding:12px;background:#f8f9fa;border-left:4px solid #4f46e5;\">\n  <h3 style=\"margin-top:0;\">AI-комментарий недели</h3>\n  <p>{{ $('Generate AI Commentary').first().json.text }}</p>\n</div>",
+        "options": {}
+      },
+      "id": "48d11b64-71c1-4a07-8065-a68371704aa1",
+      "name": "Send Weekly Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1856,
+        -96
+      ],
+      "webhookId": "27e2e355-6752-43d6-8df2-4a6b273467b3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DzMKM7pUIgZk19do",
+          "name": "Gmail account 28"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * TUE"
+            }
+          ]
+        }
+      },
+      "id": "b2d6afe9-dc99-498f-af27-da1c845d0608",
+      "name": "Cron Tue 9:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        -96
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. Get All Week Issues": {
+      "main": [
+        [
+          {
+            "node": "2. Get Open Week Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Get Open Week Issues": {
+      "main": [
+        [
+          {
+            "node": "3. Get Closed Week Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Get Closed Week Issues": {
+      "main": [
+        [
+          {
+            "node": "4. Get Week Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Get Week Comments": {
+      "main": [
+        [
+          {
+            "node": "Get Previous Week Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Previous Week Stats": {
+      "main": [
+        [
+          {
+            "node": "Aggregate & Compute Delta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate & Compute Delta": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Commentary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate AI Commentary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Commentary": {
+      "main": [
+        [
+          {
+            "node": "Save Week to Data Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Week to Data Table": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron Tue 9:00": {
+      "main": [
+        [
+          {
+            "node": "1. Get All Week Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "720a315d-cfc3-40d9-b519-0108c5cd5e68",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "68dbbb4e8fa686c3fd4e9982ade6836edb66976f207553e7ac22df961581c78c"
+  },
+  "nodeGroups": [],
+  "id": "CCHiMDhV8DoQTN0x",
+  "tags": []
+}
