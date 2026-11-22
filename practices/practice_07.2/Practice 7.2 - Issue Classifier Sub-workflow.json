@@ -1,0 +1,155 @@
+{
+  "name": "Practice 7.2 - Issue Classifier Sub-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "33ae393f-4856-4ba7-8416-e2c4bb637389",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Classify this GitHub Issue into one of: bug, task, feature, unknown.\nRules:\n- \"bug\": crash, error, broken functionality with reproduction steps or clear problem.\n- \"feature\": request for new functionality or improvement.\n- \"task\": question, documentation update, refactoring, or configuration help.\n- \"unknown\": vague, ambiguous, or too short description without details (e.g. \"it doesn't work\", \"sometimes glitches\"). If vague, ALWAYS set type to \"unknown\" and confidence below 0.6.\n\nTitle: {{ $json.title }}\nBody: {{ $json.body || \"No description\" }}",
+        "hasOutputParser": true
+      },
+      "id": "591c5d1d-70bf-43db-9f68-e08048584d56",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        16,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "id": "aa857bec-12d5-423b-9f2f-034316c8659f",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        112
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "oOjTG8UAw7NhpYGv",
+          "name": "OpenAI account 69"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"type\": {\n      \"type\": \"string\",\n      \"enum\": [\"bug\", \"task\", \"feature\", \"unknown\"]\n    },\n    \"confidence\": {\n      \"type\": \"number\"\n    }\n  },\n  \"required\": [\"type\", \"confidence\"]\n}"
+      },
+      "id": "e14eddcb-c0eb-48f9-980b-d2483ee54476",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "type",
+              "value": "={{ $json.output.type }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "confidence",
+              "value": "={{ $json.output.confidence }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cc08fc91-6bc9-497e-8b9b-abbdfea9610d",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        -112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2594e2c6-e778-453e-89bf-bd5dccd37d72",
+  "meta": {
+    "instanceId": "68dbbb4e8fa686c3fd4e9982ade6836edb66976f207553e7ac22df961581c78c"
+  },
+  "nodeGroups": [],
+  "id": "M7TB4IllmfScHCIx",
+  "tags": []
+}
