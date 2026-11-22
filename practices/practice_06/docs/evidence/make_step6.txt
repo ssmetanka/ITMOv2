@@ -1,0 +1,9 @@
+test_health_and_not_found (test_http.HttpTest.test_health_and_not_found) ... ok
+test_login_and_purchase_over_http (test_http.HttpTest.test_login_and_purchase_over_http) ... ok
+test_reviews_are_escaped_over_http (test_http.HttpTest.test_reviews_are_escaped_over_http) ... ok
+test_transport_only_binds_loopback (test_http.HttpTest.test_transport_only_binds_loopback) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.515s
+
+OK

@@ -8,3 +8,6 @@ test: install
 
 run:
 	python3 service.py
+
+step6:
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v test_http.py

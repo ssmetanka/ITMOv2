@@ -1,0 +1,19 @@
+test_http (unittest.loader._FailedTest.test_http) ... ERROR
+
+======================================================================
+ERROR: test_http (unittest.loader._FailedTest.test_http)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_http
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/unittest/loader.py", line 141, in loadTestsFromName
+    module = __import__(module_name)
+  File "/home/smetanka/Documents/itmo_disciplins/ITMOv2/practices/practice_06/lab/test_http.py", line 10, in <module>
+    from service import Shop, make_handler
+ModuleNotFoundError: No module named 'service'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)
+make: *** [Makefile:13: step6] Error 1

@@ -1,0 +1,34 @@
+Standard library only: ready
+test_health_and_not_found (test_http.HttpTest.test_health_and_not_found) ... ok
+test_login_and_purchase_over_http (test_http.HttpTest.test_login_and_purchase_over_http) ... ok
+test_reviews_are_escaped_over_http (test_http.HttpTest.test_reviews_are_escaped_over_http) ... ok
+test_transport_only_binds_loopback (test_http.HttpTest.test_transport_only_binds_loopback) ... ok
+test_assistant_context_requires_auth_and_owner_scope (test_security.SecurityRegressionTest.test_assistant_context_requires_auth_and_owner_scope) ... ok
+test_delete_tree_disabled (test_security.SecurityRegressionTest.test_delete_tree_disabled) ... ok
+test_fix_F01_profile_idor_and_injection (test_security.SecurityRegressionTest.test_fix_F01_profile_idor_and_injection) ... ok
+test_fix_F04_orders_listing_scoped (test_security.SecurityRegressionTest.test_fix_F04_orders_listing_scoped) ... ok
+test_fix_F05_catalog_price_enforced (test_security.SecurityRegressionTest.test_fix_F05_catalog_price_enforced) ... ok
+test_fix_F06_admin_export_requires_staff_session (test_security.SecurityRegressionTest.test_fix_F06_admin_export_requires_staff_session) ... ok
+test_fix_F07_files_enforce_user_scope (test_security.SecurityRegressionTest.test_fix_F07_files_enforce_user_scope) ... ok
+test_fix_F09_assistant_execute_scoped_tools (test_security.SecurityRegressionTest.test_fix_F09_assistant_execute_scoped_tools) ... ok
+test_fix_F12_logs_protected (test_security.SecurityRegressionTest.test_fix_F12_logs_protected) ... ok
+test_logs_do_not_leak_passwords_or_tokens (test_security.SecurityRegressionTest.test_logs_do_not_leak_passwords_or_tokens) ... ok
+test_reviews_xss_escaped_and_auth_required (test_security.SecurityRegressionTest.test_reviews_xss_escaped_and_auth_required) ... ok
+test_delete_of_fixture_root_stays_inside_exercise (test_service.SandboxTest.test_delete_of_fixture_root_stays_inside_exercise) ... ok
+test_external_directory_cannot_be_deleted (test_service.SandboxTest.test_external_directory_cannot_be_deleted) ... ok
+test_parent_paths_cannot_escape_exercise (test_service.SandboxTest.test_parent_paths_cannot_escape_exercise) ... ok
+test_symlink_cannot_escape_exercise (test_service.SandboxTest.test_symlink_cannot_escape_exercise) ... ok
+test_assistant_can_return_own_receipt (test_service.ShopTest.test_assistant_can_return_own_receipt) ... ok
+test_customer_can_buy_at_catalog_price (test_service.ShopTest.test_customer_can_buy_at_catalog_price) ... ok
+test_health_and_catalog (test_service.ShopTest.test_health_and_catalog) ... ok
+test_own_profile_and_receipt (test_service.ShopTest.test_own_profile_and_receipt) ... ok
+test_review_can_be_submitted_and_viewed (test_service.ShopTest.test_review_can_be_submitted_and_viewed) ... ok
+test_staff_can_export_with_staff_session (test_service.ShopTest.test_staff_can_export_with_staff_session) ... ok
+test_tokens_identify_distinct_users (test_service.ShopTest.test_tokens_identify_distinct_users) ... ok
+test_unknown_product_rejected (test_service.ShopTest.test_unknown_product_rejected) ... ok
+test_wrong_password_rejected (test_service.ShopTest.test_wrong_password_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.531s
+
+OK
