@@ -1,0 +1,5 @@
+- LG-T1: Add type check for 'diff' in POST. Files: app/api.py. Criterion: tests/test_api.py passes invalid json/type.
+- LG-T2: Count chars as UTF-16 units. Files: app/reviewer.py. Criterion: boundary tests 10000/10001.
+- LG-T3: Normalize CRLF vs LF in line counting. Files: app/reviewer.py. Criterion: splitlines handles CRLF.
+- LG-T4: Soft timeout implementation. Files: app/reviewer.py. Criterion: tests/test_review.py timeout scenario.
+- LG-T5: Serve static UI under /ui. Files: app/server.py. Criterion: tests/test_e2e.py fetch /ui/index.html 200.

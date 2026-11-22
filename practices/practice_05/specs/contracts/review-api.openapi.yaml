@@ -1,0 +1,145 @@
+openapi: 3.0.0
+info:
+  title: AI-Review API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/limits:
+    get:
+      summary: Get limits
+      responses:
+        '200':
+          description: Limits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  max_lines:
+                    type: integer
+                  max_chars:
+                    type: integer
+                required: [max_lines, max_chars]
+  /api/reviews:
+    post:
+      summary: Create review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                diff:
+                  type: string
+              required: [diff]
+      responses:
+        '200':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '504':
+          $ref: '#/components/responses/LLMUnavailable'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+    get:
+      summary: Get recent reviews
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+                  total:
+                    type: integer
+                required: [items, total]
+  /api/reviews/{id}:
+    get:
+      summary: Get review by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [DIFF_EMPTY, DIFF_TOO_LARGE, LLM_UNAVAILABLE, INVALID_REQUEST, NOT_FOUND]
+            message:
+              type: string
+            details:
+              type: object
+          required: [code, message]
+      required: [error]
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [success]
+        review:
+          type: string
+      required: [id, created_at, status, review]
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LLMUnavailable:
+      description: LLM unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

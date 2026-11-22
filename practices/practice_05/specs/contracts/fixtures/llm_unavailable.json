@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "LLM_UNAVAILABLE",
+    "message": "LLM service unavailable or timed out",
+    "details": {}
+  }
+}
